@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>氧化还原的博客</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      /* ========= 基础样式 ========= */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: #ffffff;
+        overflow: hidden;
+      }
+
+      body {
+        /* 将背景图放在与本文件同一目录下，修改文件名即可更换背景 */
+        background: radial-gradient(circle at top left, #ff9a9e 0%, #fecfef 25%, #f6d365 60%, #fda085 100%),
+          url("./bg.jpg") center/cover no-repeat fixed;
+        position: relative;
+      }
+
+      /* 背景叠加一层轻微渐变与模糊，营造梦幻效果 */
+      .bg-overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02));
+        backdrop-filter: blur(6px);
+        z-index: 0;
+        opacity: 0;
+        animation: overlayFadeIn 1.2s ease forwards;
+      }
+
+      @keyframes overlayFadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* ========= 布局 ========= */
+      .scene {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        perspective: 1200px;
+        overflow: hidden;
+      }
+
+      .card {
+        width: min(480px, 100%);
+        padding: 32px 28px 40px;
+        border-radius: 28px;
+        background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04));
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        box-shadow:
+          0 24px 40px rgba(255, 142, 142, 0.35),
+          0 0 0 1px rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        text-align: center;
+        position: relative;
+        transform: translateY(40px) rotateX(10deg);
+        opacity: 0;
+        animation: cardEnter 1.3s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+      }
+
+      @keyframes cardEnter {
+        0% {
+          opacity: 0;
+          transform: translateY(40px) rotateX(10deg) scale(0.96);
+        }
+        60% {
+          opacity: 1;
+          transform: translateY(-4px) rotateX(0deg) scale(1.02);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) rotateX(0deg) scale(1);
+        }
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 161, 208, 0.2), rgba(252, 207, 139, 0.8));
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0.9;
+        pointer-events: none;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .tag-pill {
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 214, 214, 0.4));
+        color: #b83353;
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .card-title {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-top: 8px;
+        margin-bottom: 10px;
+        text-shadow:
+          0 0 18px rgba(255, 255, 255, 0.9),
+          0 0 32px rgba(255, 132, 132, 0.7);
+      }
+
+      .card-subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        line-height: 1.6;
+        margin-bottom: 24px;
+      }
+
+      .soft-divider {
+        height: 1px;
+        width: 100%;
+        margin: 12px auto 22px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0.7),
+          rgba(255, 255, 255, 0)
+        );
+        opacity: 0.7;
+      }
+
+      /* ========= 按钮 ========= */
+      .cta-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .magic-btn {
+        position: relative;
+        padding: 14px 34px;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #fff;
+        background: conic-gradient(from 140deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1, #ff9a9e);
+        box-shadow:
+          0 14px 35px rgba(255, 123, 172, 0.6),
+          0 0 0 1px rgba(255, 255, 255, 0.7);
+        overflow: hidden;
+        transition:
+          transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+          box-shadow 0.3s ease,
+          filter 0.3s ease;
+      }
+
+      .magic-btn span {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .magic-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.9), transparent 55%);
+        opacity: 0;
+        transform: translate3d(-50%, -50%, 0) scale(0.2);
+        transition:
+          opacity 0.3s ease,
+          transform 0.5s ease;
+      }
+
+      .magic-btn:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow:
+          0 18px 40px rgba(255, 114, 159, 0.75),
+          0 0 0 1px rgba(255, 255, 255, 0.9);
+        filter: saturate(1.2);
+      }
+
+      .magic-btn:hover::before {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+
+      .magic-btn:active {
+        transform: translateY(1px) scale(0.98);
+        box-shadow:
+          0 10px 24px rgba(255, 114, 159, 0.5),
+          0 0 0 1px rgba(255, 255, 255, 0.8);
+        transition: transform 0.08s ease;
+      }
+
+      .btn-heart {
+        position: relative;
+        width: 18px;
+        height: 16px;
+      }
+
+      .btn-heart::before,
+      .btn-heart::after {
+        content: "";
+        position: absolute;
+        width: 12px;
+        height: 18px;
+        background: #fff;
+        border-radius: 999px;
+        top: -2px;
+      }
+
+      .btn-heart::before {
+        left: 2px;
+        transform: rotate(-45deg);
+        transform-origin: bottom right;
+      }
+
+      .btn-heart::after {
+        right: 2px;
+        transform: rotate(45deg);
+        transform-origin: bottom left;
+      }
+
+      .btn-caption {
+        font-size: 11px;
+        opacity: 0.9;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      /* ========= 渐隐提示文本 ========= */
+      .floating-note {
+        margin-top: 18px;
+        font-size: 13px;
+        opacity: 0;
+        animation: noteFloatIn 1.6s ease 0.6s forwards;
+      }
+
+      @keyframes noteFloatIn {
+        0% {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        100% {
+          opacity: 0.92;
+          transform: translateY(0);
+        }
+      }
+
+      .floating-note span {
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px dashed rgba(255, 255, 255, 0.6);
+        background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.02));
+        backdrop-filter: blur(10px);
+      }
+
+      /* ========= 装饰性漂浮元素 ========= */
+      .orb {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(10px);
+        opacity: 0;
+        animation: orbFloat 16s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+
+      .orb--pink {
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(255, 204, 229, 0.85), rgba(255, 138, 168, 0.1));
+        top: 4%;
+        left: -40px;
+        animation-delay: 0.5s;
+      }
+
+      .orb--purple {
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle, rgba(177, 139, 255, 0.9), rgba(130, 91, 255, 0));
+        bottom: -60px;
+        right: -40px;
+      }
+
+      @keyframes orbFloat {
+        0% {
+          transform: translate3d(0, 0, 0);
+          opacity: 0.2;
+        }
+        50% {
+          transform: translate3d(40px, -20px, 0) scale(1.04);
+          opacity: 0.45;
+        }
+        100% {
+          transform: translate3d(-20px, 40px, 0) scale(1.02);
+          opacity: 0.32;
+        }
+      }
+
+      /* ========= 心形弹出 ========= */
+      .heart {
+        position: fixed;
+        width: 32px;
+        height: 28px;
+        transform: translate(-50%, -50%) scale(0);
+        animation: heartPop 5s ease-out forwards;
+        pointer-events: none; /* 不影响网页其它操作 */
+        z-index: 5;
+      }
+
+      .heart::before,
+      .heart::after {
+        content: "";
+        position: absolute;
+        width: 18px;
+        height: 28px;
+        background: #ff3366;
+        border-radius: 999px;
+        top: 0;
+      }
+
+      .heart::before {
+        left: 4px;
+        transform: rotate(-45deg);
+        transform-origin: bottom right;
+      }
+
+      .heart::after {
+        right: 4px;
+        transform: rotate(45deg);
+        transform-origin: bottom left;
+      }
+
+      @keyframes heartPop {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0;
+        }
+        10% {
+          transform: translate(-50%, -60%) scale(1.15);
+          opacity: 1;
+        }
+        40% {
+          transform: translate(-50%, -90%) scale(1);
+          opacity: 0.96;
+        }
+        80% {
+          transform: translate(-50%, -130%) scale(0.96);
+          opacity: 0.8;
+        }
+        100% {
+          transform: translate(-50%, -160%) scale(0.9);
+          opacity: 0;
+        }
+      }
+
+      /* ========= 文字弹框 ========= */
+      .love-dialog {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 6;
+        opacity: 0;
+        pointer-events: none; /* 不拦截点击，保持网页可用 */
+        animation: dialogFade 5s ease-out forwards;
+      }
+
+      .love-dialog-box {
+        min-width: 210px;
+        max-width: 80vw;
+        padding: 16px 22px 14px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        /* 透明文本框：只有边框和内容，背景基本为透明，可看到背景图 */
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateY(18px) scale(0.96);
+      }
+
+      .love-dialog-text {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-indent: 0.2em;
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.75);
+      }
+
+      .love-dialog-heart {
+        position: relative;
+        width: 26px;
+        height: 22px;
+      }
+
+      .love-dialog-heart::before,
+      .love-dialog-heart::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 24px;
+        border-radius: 999px;
+        top: 0;
+        background: conic-gradient(
+          from 200deg,
+          #ff9a9e,
+          #fad0c4,
+          #fbc2eb,
+          #a18cd1,
+          #f6d365,
+          #ff9a9e
+        );
+      }
+
+      .love-dialog-heart::before {
+        left: 2px;
+        transform: rotate(-45deg);
+        transform-origin: bottom right;
+      }
+
+      .love-dialog-heart::after {
+        right: 2px;
+        transform: rotate(45deg);
+        transform-origin: bottom left;
+      }
+
+      @keyframes dialogFade {
+        0% {
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        80% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      /* ========= 响应式 ========= */
+      @media (max-width: 480px) {
+        .card {
+          padding: 22px 18px 26px;
+          border-radius: 22px;
+        }
+
+        .card-title {
+          font-size: 22px;
+        }
+
+        .love-dialog-text {
+          font-size: 18px;
+          letter-spacing: 0.16em;
+        }
+
+        .magic-btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- 柔光背景层 -->
+    <div class="bg-overlay"></div>
+
+    <!-- 漂浮彩色光斑，用于增加层次感 -->
+    <div class="orb orb--pink"></div>
+    <div class="orb orb--purple"></div>
+
+    <!-- 主内容 -->
+    <main class="scene">
+      <section class="card">
+        <div class="card-header">
+          <div class="tag-pill">Special · Moment</div>
+        </div>
+        <h1 class="card-title">只为你准备的小惊喜</h1>
+        <p class="card-subtitle">
+          轻轻一点，记得回头，<br />
+          透明的呢喃写着那句最简单的告白。
+        </p>
+
+        <div class="soft-divider"></div>
+
+        <div class="cta-wrapper">
+          <button class="magic-btn" id="loveButton">
+            <span>
+              <div class="btn-heart"></div>
+              <span>点我传送</span>
+            </span>
+          </button>
+          <div class="btn-caption">点击后会有小惊喜，并前往下一站</div>
+        </div>
+
+        <div class="floating-note">
+          <span></span>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // ========= 可配置：跳转目标网址 =========
+      // 只需修改下面这一行即可改变跳转地址
+      const TARGET_URL = "http://212.132.120.102:14844/";
+
+      const loveButton = document.getElementById("loveButton");
+
+      function createHeart() {
+        const heart = document.createElement("div");
+        heart.className = "heart";
+
+        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+        const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+        // 随机出现在屏幕中心附近区域
+        const x = 20 + Math.random() * 60; // 20% ~ 80%
+        const y = 30 + Math.random() * 40; // 30% ~ 70%
+
+        heart.style.left = x + "vw";
+        heart.style.top = y + "vh";
+
+        // 随机放大/缩小与轻微旋转
+        const scale = 0.8 + Math.random() * 0.6;
+        const rotate = -18 + Math.random() * 36;
+        heart.style.transform += " rotate(" + rotate + "deg) scale(" + scale + ")";
+
+        // 淡淡随机红色
+        const hue = 340 + Math.random() * 20;
+        heart.style.filter = "hue-rotate(" + hue + "deg)";
+
+        document.body.appendChild(heart);
+
+        // 5s后自动移除，不需要点击消失
+        setTimeout(() => {
+          heart.remove();
+        }, 5000);
+      }
+
+      function showLoveDialog() {
+        const dialog = document.createElement("div");
+        dialog.className = "love-dialog";
+
+        dialog.innerHTML = `
+          <div class="love-dialog-box">
+            <span class="love-dialog-text">爱你呦</span>
+            <span class="love-dialog-heart"></span>
+          </div>
+        `;
+
+        document.body.appendChild(dialog);
+
+        // 5s 后自动消失
+        setTimeout(() => {
+          dialog.remove();
+        }, 5000);
+      }
+
+      function playHeartsAndDialog() {
+        // 随机 10 个红心
+        for (let i = 0; i < 10; i++) {
+          // 稍稍错开时间，形成小连贯
+          setTimeout(createHeart, i * 80);
+        }
+
+        // 弹出透明文本框
+        showLoveDialog();
+      }
+
+      loveButton.addEventListener("click", () => {
+        playHeartsAndDialog();
+
+         // 在当前页面直接跳转到目标网址
+         window.location.href = TARGET_URL;
+      });
+    </script>
+  </body>
+</html>
+
